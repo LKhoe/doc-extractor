@@ -1,0 +1,44 @@
+# doc-extractor — static page served by nginx. No database or other local-infra service needed.
+# Contract: local-infra/DEPLOYING-APPS.md (one service, name == image, healthcheck, no bind mounts).
+services:
+  doc-extractor:
+    container_name: doc-extractor
+    image: doc-extractor:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      # LAN access (http://umbrel.local:3004). The tunnel doesn't use it.
+      - "${PORT:-3004}:3000"
+    environment:
+      - TZ=${TZ:-America/Sao_Paulo}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      # Public access through local-infra's Cloudflare tunnel: http://doc-extractor:3000
+      - localinfra_tunnel
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  localinfra_tunnel:
+    external: true

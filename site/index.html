@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Reader AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Document Reader AI</h1>
+      <p class="subtitle">Extract information from PDF documents using on-device AI</p>
+    </header>
+
+    <div class="engine-selector" id="engineSelector">
+      <p class="engine-loading">Detecting available AI engines...</p>
+    </div>
+    <button type="button" id="chromeFlagsBtn" class="btn-chrome-flags">How to enable Gemini Nano in Chrome</button>
+    <div id="chromeFlagsInfo" class="chrome-flags-info" hidden>
+      <p>To use Gemini Nano, enable these flags in Chrome (version 128+):</p>
+      <ol>
+        <li>Open <code>chrome://flags/#optimization-guide-on-device-model</code> &rarr; set to <strong>Enabled BypassPerfRequirement</strong></li>
+        <li>Open <code>chrome://flags/#prompt-api-for-gemini-nano</code> &rarr; set to <strong>Enabled</strong></li>
+        <li>For multimodal support, also enable <code>chrome://flags/#prompt-api-for-gemini-nano-multimodal-input</code></li>
+        <li>Relaunch Chrome</li>
+        <li>Open <code>chrome://components</code>, find <strong>Optimization Guide On Device Model</strong> and click <em>Check for update</em></li>
+      </ol>
+      <p class="chrome-flags-note">After the model downloads (~1.7 GB), the Gemini Nano engines will show as Ready.</p>
+    </div>
+
+    <main>
+      <!-- Step 1: Upload -->
+      <section id="uploadSection">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".pdf" hidden>
+          <div class="drop-zone-content">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <polyline points="9 15 12 12 15 15"/>
+            </svg>
+            <p>Drop a PDF here or <button type="button" id="browseBtn">browse</button></p>
+            <small>PDF files only</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2: Page Selection -->
+      <section id="pageSection" class="card" hidden>
+        <div class="page-selector-header">
+          <h3>Select Pages</h3>
+          <span class="page-count" id="pageCount"></span>
+        </div>
+        <div class="page-controls">
+          <label for="pageRange">Pages</label>
+          <input type="text" id="pageRange" placeholder="e.g. 1-3 or 1,3,5">
+        </div>
+        <div class="page-thumbnails" id="pageThumbnails"></div>
+      </section>
+
+      <!-- Step 3: Extraction Config -->
+      <section id="configSection" class="card" hidden>
+        <h3>What to Extract</h3>
+
+        <div class="config-group">
+          <label for="extractInstructions">Instructions <span class="label-hint">(optional)</span></label>
+          <textarea id="extractInstructions" rows="2" placeholder="e.g. This is a medical invoice. Focus on patient info, procedure codes and amounts."></textarea>
+        </div>
+
+        <div class="config-group">
+          <label>Fields</label>
+          <div class="field-rows" id="fieldRows"></div>
+          <button type="button" id="addFieldBtn" class="btn-add-field">+ Add field</button>
+        </div>
+
+        <button type="button" id="analyzeBtn" class="btn-primary btn-analyze">Analyze</button>
+      </section>
+
+      <!-- Status -->
+      <section id="statusArea" class="card" hidden>
+        <div class="spinner" id="spinner"></div>
+        <p id="statusText">Processing...</p>
+        <div class="progress-bar" id="progressBar" hidden>
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section id="resultsArea" hidden>
+        <div class="results-header">
+          <h2>Extracted Information</h2>
+          <span class="elapsed-time" id="elapsedTime"></span>
+          <button type="button" id="resetBtn" class="btn-secondary">New Document</button>
+        </div>
+        <div class="result-grid" id="resultGrid"></div>
+        <details class="raw-output">
+          <summary>Raw AI Response</summary>
+          <pre id="rawResponse"></pre>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
