@@ -202,13 +202,17 @@ function pagesToRangeString(pages) {
 // PDF Utilities (lazy-loaded)
 // ============================================
 
+// Every library's code and wasm is self-hosted under /vendor/<lib>@<exact version>/ (scripts/vendor.sh
+// downloads them at build time, checksum-verified); the CSP allows scripts from 'self' only.
+// Only model weights and Tesseract language data are fetched from remote hosts.
+const VENDOR = new URL('vendor/', document.baseURI).href;
+
 let pdfjsLib = null;
 
 async function loadPdfJs() {
   if (pdfjsLib) return pdfjsLib;
-  pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.min.mjs');
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.worker.min.mjs';
+  pdfjsLib = await import(`${VENDOR}pdfjs-dist@4.8.69/pdf.min.mjs`);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `${VENDOR}pdfjs-dist@4.8.69/pdf.worker.min.mjs`;
   return pdfjsLib;
 }
 
@@ -458,12 +462,23 @@ async function analyzePromptAPIText(pages, onChunk) {
 // Florence-2 (Multimodal OCR + Captioning)
 // ============================================
 
+let transformersLib = null;
+
+async function loadTransformers() {
+  if (transformersLib) return transformersLib;
+  const lib = await import(`${VENDOR}transformers@3.8.1/transformers.web.min.js`);
+  // onnxruntime-web's wasm and loader ship next to the bundle; default is a jsDelivr URL
+  lib.env.backends.onnx.wasm.wasmPaths = `${VENDOR}transformers@3.8.1/`;
+  transformersLib = lib;
+  return lib;
+}
+
 async function initFlorence(onStatus, onProgress) {
   if (florenceModel && florenceProcessor) return;
 
   timerPause();
   onStatus?.('Loading Florence-2 library...');
-  const transformers = await import('https://esm.sh/@huggingface/transformers@3.8.1');
+  const transformers = await loadTransformers();
   const { Florence2ForConditionalGeneration, AutoProcessor } = transformers;
 
   const modelId = CONFIG.florence.modelId;
@@ -503,7 +518,7 @@ async function initFlorence(onStatus, onProgress) {
 }
 
 async function florenceTask(imageBlob, task) {
-  const transformers = await import('https://esm.sh/@huggingface/transformers@3.8.1');
+  const transformers = await loadTransformers();
   const { RawImage } = transformers;
 
   const url = URL.createObjectURL(imageBlob);
@@ -559,7 +574,13 @@ async function florenceCaption(imageBlobs, onStatus) {
 async function ocrWithTesseract(imageBlobs, onStatus, onProgress) {
   timerPause();
   onStatus?.('Loading Tesseract.js OCR engine...');
+  const tessDir = `${VENDOR}tesseract.js@5.1.1/`;
   const worker = await Tesseract.createWorker('eng', 1, {
+    // Self-hosted worker and wasm core (the language data stays on jsDelivr: it is data, not code).
+    // workerBlobURL:false loads the worker straight from our origin instead of a blob: wrapper.
+    workerPath: `${tessDir}worker.min.js`,
+    corePath: `${VENDOR}tesseract.js-core@5.1.1/`,
+    workerBlobURL: false,
     logger: (m) => {
       if (m.status === 'loading tesseract core') {
         onStatus?.('Loading Tesseract core...');
@@ -593,18 +614,18 @@ async function ocrWithTesseract(imageBlobs, onStatus, onProgress) {
 // ============================================
 
 const WLLAMA_VERSION = '2.3.7';
-const WLLAMA_CDN = `https://cdn.jsdelivr.net/npm/@wllama/wllama@${WLLAMA_VERSION}`;
+const WLLAMA_BASE = `${VENDOR}wllama@${WLLAMA_VERSION}`;
 
 async function initWllama(onStatus, onProgress) {
   if (wllamaInstance) return;
 
   timerPause();
   onStatus?.('Loading wllama engine...');
-  const { Wllama } = await import(`${WLLAMA_CDN}/esm/index.js`);
+  const { Wllama } = await import(`${WLLAMA_BASE}/index.js`);
 
   const wasmPaths = {
-    'single-thread/wllama.wasm': `${WLLAMA_CDN}/esm/single-thread/wllama.wasm`,
-    'multi-thread/wllama.wasm': `${WLLAMA_CDN}/esm/multi-thread/wllama.wasm`,
+    'single-thread/wllama.wasm': `${WLLAMA_BASE}/single-thread/wllama.wasm`,
+    'multi-thread/wllama.wasm': `${WLLAMA_BASE}/multi-thread/wllama.wasm`,
   };
 
   wllamaInstance = new Wllama(wasmPaths);
@@ -845,9 +866,9 @@ function setProgress(pct) {
 
 function showError(msg) {
   hideStatus();
-  resultGrid.innerHTML = `<div class="result-card" style="border-left:3px solid var(--error)">
+  resultGrid.innerHTML = `<div class="result-card error-card">
     <div class="label">Error</div>
-    <div class="value" style="color:var(--error)">${escapeHtml(msg)}</div>
+    <div class="value">${escapeHtml(msg)}</div>
   </div>`;
   resultsArea.hidden = false;
 }

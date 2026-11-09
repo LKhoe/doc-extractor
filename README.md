@@ -18,16 +18,26 @@ The page detects which engines the browser can run and lets you pick one:
 | Florence-2 + wllama | ~570 MB model download, on-device vision OCR |
 | Tesseract.js + wllama | ~370 MB model download, traditional OCR |
 
-Libraries and models (pdf.js, tesseract.js, transformers.js, wllama, Hugging Face models) are loaded
-from CDNs at runtime, so the browser needs internet access.
+The libraries (pdf.js, tesseract.js + core, transformers.js + onnxruntime wasm, wllama) are
+**self-hosted** under `/vendor/<lib>@<exact version>/`: `scripts/vendor.sh` downloads each from the npm
+registry at a pinned version and checks a pinned SHA-512 before unpacking; the Dockerfile runs it in a
+build stage, and `site/vendor/` is git-ignored (run the script by hand to use `site/` outside Docker).
+To bump a library, change its version and checksum in the script and the path in `site/app.js` /
+`site/index.html`. Only data is fetched from remote hosts at runtime, so the browser still needs
+internet access: model weights (Hugging Face, which redirects to `*.hf.co`) and Tesseract language
+data (jsDelivr). `security-headers.inc` sets a Content-Security-Policy that allows scripts from
+`'self'` only (plus `'wasm-unsafe-eval'`) and `connect-src` to those hosts; if a library starts loading
+something new, the browser console shows the violation and `connect-src` / `scripts/vendor.sh` need updating.
 
 ## Layout
 
 ```
-site/             index.html, style.css, app.js (the whole app), favicon.svg
+site/             index.html, style.css, app.js (the whole app), favicon.svg (+ vendor/, generated)
+scripts/vendor.sh downloads and verifies the self-hosted libraries into site/vendor/
+security-headers.inc  COOP/COEP, CSP, HSTS, Referrer-Policy (included by every nginx location)
 docs/             screenshot.png, icon.png (512 px render of site/favicon.svg)
-nginx.conf        serves site/ on :3000, adds COOP/COEP headers (required for multi-threaded WASM), /health
-Dockerfile        nginxinc/nginx-unprivileged:alpine-slim (~19 MB image)
+nginx.conf        serves site/ on :3000, /health (COOP/COEP are required for multi-threaded WASM)
+Dockerfile        vendor stage + nginxinc/nginx-unprivileged:alpine-slim (~50 MB image, 35 MB of it wasm)
 docker-compose.yml, deploy.sh   deploy to the Raspberry Pi (see below)
 ```
 

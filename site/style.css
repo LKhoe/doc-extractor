@@ -696,3 +696,7 @@ h1 {
   border-top: 1px solid var(--gray-100);
   font-family: "SF Mono", "Fira Code", monospace;
 }
+
+/* Error card (was inline style; the CSP forbids inline styles) */
+.result-card.error-card { border-left: 3px solid var(--error); }
+.result-card.error-card .value { color: var(--error); }
