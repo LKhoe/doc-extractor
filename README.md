@@ -1,5 +1,7 @@
 # doc-extractor
 
+<img src="docs/icon.png" alt="doc-extractor icon" width="96" align="right">
+
 Static web page that extracts structured information (type, title, author, date, summary, or any
 fields you define) from PDF documents, using AI that runs **in the browser**. Nothing is uploaded to
 a server: the PDF is read and analysed on the user's machine.
@@ -22,7 +24,8 @@ from CDNs at runtime, so the browser needs internet access.
 ## Layout
 
 ```
-site/             index.html, style.css, app.js (the whole app)
+site/             index.html, style.css, app.js (the whole app), favicon.svg
+docs/             screenshot.png, icon.png (512 px render of site/favicon.svg)
 nginx.conf        serves site/ on :3000, adds COOP/COEP headers (required for multi-threaded WASM), /health
 Dockerfile        nginxinc/nginx-unprivileged:alpine-slim (~19 MB image)
 docker-compose.yml, deploy.sh   deploy to the Raspberry Pi (see below)
