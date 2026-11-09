@@ -2,8 +2,7 @@
   <rect width="64" height="64" rx="14" fill="#4f46e5"/>
   <path d="M18 10h20l12 12v30a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4z" fill="#fff"/>
   <path d="M38 10v8a4 4 0 0 0 4 4h8z" fill="#c7d2fe"/>
-  <rect x="21" y="29" width="22" height="4" rx="2" fill="#e0e7ff"/>
-  <rect x="21" y="37" width="22" height="4" rx="2" fill="#4f46e5"/>
-  <rect x="21" y="45" width="14" height="4" rx="2" fill="#e0e7ff"/>
-  <circle cx="46" cy="39" r="3" fill="#16a34a"/>
+  <!-- AI sparkle: large + small four-pointed stars -->
+  <path d="M30 25C31.5 32 33 34.5 41 36C33 37.5 31.5 40 30 47C28.5 40 27 37.5 19 36C27 34.5 28.5 32 30 25Z" fill="#4f46e5"/>
+  <path d="M41 43C41.7 46.3 42.7 47.3 46 48C42.7 48.7 41.7 49.7 41 53C40.3 49.7 39.3 48.7 36 48C39.3 47.3 40.3 46.3 41 43Z" fill="#818cf8"/>
 </svg>
