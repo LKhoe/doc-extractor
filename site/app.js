@@ -466,7 +466,7 @@ let transformersLib = null;
 
 async function loadTransformers() {
   if (transformersLib) return transformersLib;
-  const lib = await import(`${VENDOR}transformers@3.8.1/transformers.web.min.js`);
+  const lib = await import(`${VENDOR}transformers@3.8.1/transformers.min.js`);
   // onnxruntime-web's wasm and loader ship next to the bundle; default is a jsDelivr URL
   lib.env.backends.onnx.wasm.wasmPaths = `${VENDOR}transformers@3.8.1/`;
   transformersLib = lib;

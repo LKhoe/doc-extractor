@@ -47,7 +47,7 @@ for f in tesseract-core-lstm.wasm.js tesseract-core-simd-lstm.wasm.js LICENSE; d
 # transformers.js (browser bundle) and the onnxruntime-web wasm it ships in dist/
 V=3.8.1
 fetch @huggingface/transformers "transformers-$V" b6c4e4e33563226a9daa34bcfc0399836c8d2ddd73f52e6ffbba143e95da6ac0d1c040e107ec678252b593971a776ea52f9fd921a791120596cb46ecf72f693c tf
-for f in transformers.web.min.js ort-wasm-simd-threaded.jsep.mjs ort-wasm-simd-threaded.jsep.wasm; do put "$TMP/tf/package/dist/$f" "$OUT/transformers@$V"; done
+for f in transformers.min.js ort-wasm-simd-threaded.jsep.mjs ort-wasm-simd-threaded.jsep.wasm; do put "$TMP/tf/package/dist/$f" "$OUT/transformers@$V"; done
 put "$TMP/tf/package/LICENSE" "$OUT/transformers@$V"
 
 # wllama
