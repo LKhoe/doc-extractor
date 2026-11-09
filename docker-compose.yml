@@ -18,6 +18,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+    labels:
+      # Shown on the Container Health page (resource map: the app's icon and link)
+      - localinfra.url=${APP_URL:-https://doc-extractor.khoe.dev}
     restart: unless-stopped
     read_only: true
     tmpfs:

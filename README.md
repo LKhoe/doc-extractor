@@ -54,7 +54,7 @@ Docker context; the image is built on the Mac (linux/arm64) and loaded into the 
 ### Public access (Cloudflare tunnel)
 
 Cloudflare Zero Trust → Networks → Tunnels → `localinfra-tunnel` → *Published application routes* →
-add a route: your hostname, service type `HTTP`, URL `doc-extractor:3000`.
+add a route: hostname `doc-extractor.khoe.dev` (it is the address the Container Health map links to, set by the `localinfra.url` label), service type `HTTP`, URL `doc-extractor:3000`.
 
 The container already joins `localinfra_tunnel`, so no other change is needed. The page is public
 and has no login; anything it does happens in the visitor's browser.
