@@ -8,8 +8,9 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      # LAN access (http://umbrel.local:3004). The tunnel doesn't use it.
-      - "${PORT:-3004}:3000"
+      # Loopback only: the tunnel reaches the app over the Docker network, not this port. From
+      # another machine use an SSH tunnel (ssh -L 3004:127.0.0.1:3004 umbrel).
+      - "127.0.0.1:${PORT:-3004}:3000"
     environment:
       - TZ=${TZ:-America/Sao_Paulo}
     healthcheck:
