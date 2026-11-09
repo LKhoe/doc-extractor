@@ -36,8 +36,8 @@ site/             index.html, style.css, app.js (the whole app), favicon.svg (+ 
 scripts/vendor.sh downloads and verifies the self-hosted libraries into site/vendor/
 security-headers.inc  COOP/COEP, CSP, HSTS, Referrer-Policy (included by every nginx location)
 docs/             screenshot.png, icon.png (512 px render of site/favicon.svg)
-nginx.conf        serves site/ on :3000, /health (COOP/COEP are required for multi-threaded WASM)
-Dockerfile        vendor stage + nginxinc/nginx-unprivileged:alpine-slim (~50 MB image, 35 MB of it wasm)
+nginx.conf        serves site/ on :3000, /health, cache rules: /vendor immutable for 1 year, index.html no-cache, app.js/style.css/favicon 1 h
+Dockerfile        vendor stage + nginxinc/nginx-unprivileged:1.28.2-alpine-slim (~50 MB image, 35 MB of it wasm)
 docker-compose.yml, deploy.sh   deploy to the Raspberry Pi (see below)
 ```
 

@@ -7,7 +7,7 @@ RUN apk add --no-cache curl
 COPY scripts/vendor.sh /vendor.sh
 RUN sh /vendor.sh /out
 
-FROM nginxinc/nginx-unprivileged:alpine-slim
+FROM nginxinc/nginx-unprivileged:1.28.2-alpine-slim
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.inc /etc/nginx/snippets/security-headers.inc
 COPY site/ /usr/share/nginx/html/
