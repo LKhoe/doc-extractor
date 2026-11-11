@@ -1,12 +1,12 @@
-# doc-extractor
+# doc-reader
 
-<img src="docs/icon.png" alt="doc-extractor icon" width="96" align="right">
+<img src="docs/icon.png" alt="doc-reader icon" width="96" align="right">
 
 Static web page that extracts structured information (type, title, author, date, summary, or any
 fields you define) from PDF documents, using AI that runs **in the browser**. Nothing is uploaded to
 a server: the PDF is read and analysed on the user's machine.
 
-![doc-extractor](docs/screenshot.png)
+![doc-reader](docs/screenshot.png)
 
 ## Engines
 
@@ -64,7 +64,7 @@ Docker context; the image is built on the Mac (linux/arm64) and loaded into the 
 ### Public access (Cloudflare tunnel)
 
 Cloudflare Zero Trust → Networks → Tunnels → `localinfra-tunnel` → *Published application routes* →
-add a route: hostname `doc-extractor.khoe.dev` (it is the address the Container Health map links to, set by the `localinfra.url` label), service type `HTTP`, URL `doc-extractor:3000`.
+add a route: hostname `doc-reader.khoe.dev` (it is the address the Container Health map links to, set by the `localinfra.url` label), service type `HTTP`, URL `doc-reader:3000`.
 
 The container already joins `localinfra_tunnel`, so no other change is needed. The page is public
 and has no login; anything it does happens in the visitor's browser.

@@ -1,9 +1,9 @@
-# doc-extractor — static page served by nginx. No database or other local-infra service needed.
+# doc-reader — static page served by nginx. No database or other local-infra service needed.
 # Contract: local-infra/DEPLOYING-APPS.md (one service, name == image, healthcheck, no bind mounts).
 services:
-  doc-extractor:
-    container_name: doc-extractor
-    image: doc-extractor:latest
+  doc-reader:
+    container_name: doc-reader
+    image: doc-reader:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -21,7 +21,7 @@ services:
       start_period: 5s
     labels:
       # Shown on the Container Health page (resource map: the app's icon and link)
-      - localinfra.url=${APP_URL:-https://doc-extractor.khoe.dev}
+      - localinfra.url=${APP_URL:-https://doc-reader.khoe.dev}
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -31,7 +31,7 @@ services:
     security_opt:
       - no-new-privileges:true
     networks:
-      # Public access through local-infra's Cloudflare tunnel: http://doc-extractor:3000
+      # Public access through local-infra's Cloudflare tunnel: http://doc-reader:3000
       - localinfra_tunnel
     deploy:
       resources:
