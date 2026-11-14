@@ -10,7 +10,8 @@
 #
 # The image is built on THIS machine (linux/arm64, same as the Pi, so no emulation on Apple Silicon)
 # and streamed to the Pi with `docker save | docker load`; the Pi never builds. DEPLOY_BUILD=remote
-# goes back to building on the Pi.
+# goes back to building on the Pi. If Docker Desktop is not running, it is started for the build and
+# quit again afterwards (also when the deploy fails); if it was already running, it is left running.
 #
 # Overridable: DEPLOY_CONTEXT (default "umbrel"), BUILD_CONTEXT (local Docker context that builds,
 # default "desktop-linux"), DEPLOY_BUILD (local | remote, default local)
@@ -115,6 +116,31 @@ case "${1:-}" in
   *) die "Unknown option: $1 (use --release or --rollback)" ;;
 esac
 
+# ---------------------------------------------------------------- Docker Desktop (local build)
+# Started now, without waiting, so it boots while the checks below run; waited for before the build.
+started_docker_desktop=false
+local_docker_up() { DOCKER_CONTEXT="$BUILD_CONTEXT" docker info >/dev/null 2>&1; }
+stop_docker_desktop() {
+  $started_docker_desktop || return 0
+  started_docker_desktop=false
+  echo "==> Quitting Docker Desktop (this deploy started it)..."
+  docker desktop stop --timeout 60 >/dev/null 2>&1 || osascript -e 'quit app "Docker"' >/dev/null 2>&1 || true
+}
+if [[ "$DEPLOY_BUILD" != remote && "$(uname)" == Darwin ]] && ! local_docker_up; then
+  echo "==> Docker Desktop is not running: starting it (it will be quit when the deploy ends)..."
+  started_docker_desktop=true
+  trap stop_docker_desktop EXIT
+  docker desktop start --detach >/dev/null 2>&1 || open -ga Docker || die "Could not start Docker Desktop."
+fi
+wait_local_docker() {
+  local waited=0
+  until local_docker_up; do
+    (( waited < 180 )) || die "Local Docker context '${BUILD_CONTEXT}' is not reachable (is Docker Desktop running?)."
+    (( waited == 0 )) && echo "==> Waiting for Docker Desktop to start..."
+    sleep 3; waited=$((waited + 3))
+  done
+}
+
 # ---------------------------------------------------------------- pre-flight
 # External networks (local-infra's) must already exist on the target —
 # checked before the build, which takes minutes on the Pi.
@@ -166,8 +192,7 @@ if [[ "$DEPLOY_BUILD" == remote ]]; then
 else
   [[ "$(docker context inspect "$BUILD_CONTEXT" --format '{{.Endpoints.docker.Host}}' 2>/dev/null)" != ssh://* ]] \
     || die "BUILD_CONTEXT '${BUILD_CONTEXT}' must be a local Docker context, not a remote one."
-  DOCKER_CONTEXT="$BUILD_CONTEXT" docker info >/dev/null 2>&1 \
-    || die "Local Docker context '${BUILD_CONTEXT}' is not reachable (is Docker Desktop running?)."
+  wait_local_docker
   echo "==> Building ${SERVICE} (linux/arm64) on this machine, context '${BUILD_CONTEXT}'..."
   DOCKER_CONTEXT="$BUILD_CONTEXT" docker build --platform linux/arm64 -t "${IMAGE}:latest" .
   local_id=$(DOCKER_CONTEXT="$BUILD_CONTEXT" docker image inspect --format '{{.Id}}' "${IMAGE}:latest")
@@ -175,6 +200,7 @@ else
   DOCKER_CONTEXT="$BUILD_CONTEXT" docker save "${IMAGE}:latest" | docker load >/dev/null
   [[ "$(docker image inspect --format '{{.Id}}' "${IMAGE}:latest" 2>/dev/null)" == "$local_id" ]] \
     || die "The image on '${DOCKER_CONTEXT}' doesn't match the one built here; nothing was restarted."
+  stop_docker_desktop # not needed any more: the image is on the Pi
 fi
 recreate
 wait_healthy
